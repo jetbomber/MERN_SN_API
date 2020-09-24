@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 let uuidv1 = require("uuidv1");
 const crypto = require("crypto");
 const { ObjectId } = mongoose.Schema;
+const Post = require("./post");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -59,6 +60,11 @@ userSchema
   .get(function () {
     return this._password;
   });
+
+userSchema.pre("remove", function (next) {
+  Post.remove({ postedBy: this._id }).exec();
+  next();
+});
 
 //methods
 userSchema.methods = {
