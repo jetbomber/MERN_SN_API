@@ -30,15 +30,31 @@ exports.hasAuthorization = (req, res, next) => {
   next();
 };
 
-exports.allUsers = (req, res) => {
-  User.find((err, users) => {
-    if (err) {
-      return res.status(400).json({
-        error: err,
+exports.allUsers = async (req, res) => {
+  // get current page from req.query or use default value of 1
+  const currentPage = req.query.page || 1;
+  // return 5 users per page
+  const perPage = 9;
+  let totalItems;
+
+  const users = await User.find()
+    // countDocuments() gives you total count of users
+    .countDocuments()
+    .then((count) => {
+      totalItems = count;
+      return User.find()
+        .skip((currentPage - 1) * perPage)
+        .limit(perPage)
+        .select("name email updated created role about");
+    })
+    .then((users) => {
+      res.status(200).json({
+        totalItems: totalItems,
+        perPage: perPage,
+        users: users,
       });
-    }
-    res.json(users);
-  }).select("name email updated created role");
+    })
+    .catch((err) => console.log(err));
 };
 
 exports.getUser = (req, res) => {
@@ -162,15 +178,31 @@ exports.removeFollower = (req, res, next) => {
     });
 };
 
-exports.findPeople = (req, res) => {
+exports.findPeople = async (req, res) => {
+  // get current page from req.query or use default value of 1
+  const currentPage = req.query.page || 1;
+  // return 5 users per page
+  const perPage = 9;
+  let totalItems;
   let following = req.profile.following;
   following.push(req.profile._id);
-  User.find({ _id: { $nin: following } }, (err, users) => {
-    if (err) {
-      return res.status(400).json({
-        error: err,
+
+  const users = await User.find({ _id: { $nin: following } })
+    // countDocuments() gives you total count of users
+    .countDocuments()
+    .then((count) => {
+      totalItems = count;
+      return User.find({ _id: { $nin: following } })
+        .skip((currentPage - 1) * perPage)
+        .limit(perPage)
+        .select("name email");
+    })
+    .then((users) => {
+      res.status(200).json({
+        totalItems: totalItems,
+        perPage: perPage,
+        users: users,
       });
-    }
-    res.json(users);
-  }).select("name");
+    })
+    .catch((err) => console.log(err));
 };
