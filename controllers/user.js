@@ -2,6 +2,7 @@ const _ = require("lodash");
 const User = require("../models/user");
 const formidable = require("formidable");
 const fs = require("fs");
+const { Console } = require("console");
 
 exports.userById = (req, res, next, id) => {
   User.findById(id)
@@ -132,7 +133,7 @@ exports.addFollower = (req, res, next) => {
     { new: true }
   )
     .populate("following", "_id name")
-    .populate("following", "_id name")
+    .populate("followers", "_id name")
     .exec((err, result) => {
       if (err) {
         return res.status(400).json({
@@ -165,7 +166,7 @@ exports.removeFollower = (req, res, next) => {
     { new: true }
   )
     .populate("following", "_id name")
-    .populate("following", "_id name")
+    .populate("followers", "_id name")
     .exec((err, result) => {
       if (err) {
         return res.status(400).json({
